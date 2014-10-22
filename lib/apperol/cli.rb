@@ -144,7 +144,12 @@ module Apperol
       req = Net::HTTP::Get.new(github_url)
       req.basic_auth *github_creds
       res = github_http.request(req)
-      res["Location"]
+      if res["Location"]
+        res["Location"]
+      else
+        $stderr.puts("error: No tarball found for #{github_url} : #{JSON.parse(res.body)["message"]}")
+        exit 1
+      end
     end
 
     def github_http
