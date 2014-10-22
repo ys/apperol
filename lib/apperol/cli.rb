@@ -27,6 +27,9 @@ module Apperol
         opts.on("-p", "--personal", "Force app in personal apps instead of orgs") do
           @options[:personal] = true
         end
+        opts.on("-r", "--repo repo", "GitHub repository used for the deploy") do |repo|
+          @options[:repo] = repo
+        end
         opts.on("-s", "--stack stack", "Stack for app on heroku") do |stack|
           @options[:stack] = stack
         end
@@ -162,6 +165,10 @@ module Apperol
       @options.fetch(:personal, false)
     end
 
+    def repo
+      @options.fetch(:repo, "heroku/#{heroku_app_name}")
+    end
+
     def rollbar_token
       @options.fetch(:rollbar_token) {
         $stdout.puts("Missing rollbar_token option, its not required but you won't have exception tracking")
@@ -184,7 +191,7 @@ module Apperol
     end
 
     def github_url
-      @github_url ||= URI("https://api.github.com/repos/heroku/#{heroku_app_name}/tarball/#{github_branch}")
+      @github_url ||= URI("https://api.github.com/repos/#{repo}/tarball/#{github_branch}")
     end
 
     def github_creds
