@@ -1,6 +1,7 @@
 # Apperol
 
-TODO: Write a gem description
+Create apps from heroku repositories on GitHub.
+Use app.json to customize options.
 
 ## Installation
 
@@ -20,7 +21,18 @@ Or install it yourself as:
 
 ## Usage
 
-TODO: Write usage instructions here
+```
+Usage: apperol [options] [app_extension]
+    -p, --personal                   Force app in personal apps instead of orgs
+    -s, --stack stack                Stack for app on heroku
+    -b, --branch branch              Branch to setup app from
+    -h, --help                       Displays Help
+```
+
+## Information
+
+- App will be named [current_dir]-[app_extension] e.g.: direwolf-staging
+- Apperol CLI will have many options based on `env` part of the `app.json`
 
 ## Contributing
 
