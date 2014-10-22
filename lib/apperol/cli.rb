@@ -20,7 +20,7 @@ module Apperol
           option_key_key = key.downcase.to_sym
           # Set default
           @options[option_key_key] = definition["value"]
-          opts.on("--#{option_key_name} value", definition["description"]) do |value|
+          opts.on("--#{option_key_name} value", "#{definition["description"]} (Default: '#{definition["value"]}')") do |value|
             @options[option_key_key] = value
           end
         end
