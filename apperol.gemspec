@@ -10,7 +10,7 @@ Gem::Specification.new do |spec|
   spec.email         = ["yannick@heroku.com"]
   spec.summary       = %q{Create heroku app from heroku repository}
   spec.description   = %q{Create heroku app from heroku repository with app.json}
-  spec.homepage      = ""
+  spec.homepage      = "https://github.com/ys/apperol"
   spec.license       = "MIT"
 
   spec.files         = `git ls-files -z`.split("\x0")
