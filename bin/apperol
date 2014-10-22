@@ -1,0 +1,5 @@
+#!/usr/bin/env ruby
+
+require 'apperol'
+puts Apperol::CLI.new(ARGV).call
+
