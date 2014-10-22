@@ -135,8 +135,17 @@ module Apperol
         source_blob: { url: github_tarball_location },
         overrides: { env: {}}
       }
-      app_json["env"].each_key do |key|
-        payload[:overrides][:env][key] = @options[key.downcase.to_sym]
+      required_not_filled = []
+      app_json["env"].each do |key, definition|
+        value = @options[key.downcase.to_sym]
+        if definition["required"] && value.strip.empty?
+          required_not_filled << key
+        end
+        payload[:overrides][:env][key] = value
+      end
+      unless required_not_filled.empty?
+        $stderr.puts("error: Required fields not filled. Please specify them. #{required_not_filled}")
+        exit 1
       end
       payload[:app][:organization] = "heroku" unless personal_app?
       payload.to_json
