@@ -30,6 +30,12 @@ module Apperol
         opts.on("-r", "--repo repo", "GitHub repository used for the deploy") do |repo|
           @options[:repo] = repo
         end
+        opts.on("-o", "--org org", "GitHub org where current repo is located") do |org|
+          @options[:org] = org
+        end
+        opts.on("-u", "--user user", "GitHub user where current repo is located") do |user|
+          @options[:org] = user
+        end
         opts.on("-s", "--stack stack", "Stack for app on heroku") do |stack|
           @options[:stack] = stack
         end
@@ -175,7 +181,15 @@ module Apperol
     end
 
     def repo
-      @options.fetch(:repo, "heroku/#{heroku_app_name}")
+      @options.fetch(:repo, default_repo)
+    end
+
+    def default_repo
+      "#{org}/#{heroku_app_name}"
+    end
+
+    def org
+      @options.fetch(:org, "heroku")
     end
 
     def rollbar_token
