@@ -1,5 +1,7 @@
 # Apperol
 
+![](http://cl.ly/image/0C230a0p2p0G/apperol.png)
+
 Create apps from heroku repositories on GitHub.
 Use app.json to customize options.
 
