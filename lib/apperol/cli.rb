@@ -26,16 +26,16 @@ module Apperol
         opts.on("-o", "--org ORG", "Push app to organization on heroku") do |org|
           @options[:org] = org
         end
-        opts.on("-r", "--repo repo", "GitHub repository used for the deploy (Default: user/dir_name)") do |repo|
+        opts.on("-r", "--repo REPO", "GitHub repository used for the deploy (Default: user/dir_name)") do |repo|
           @options[:repo] = repo
         end
-        opts.on("-u", "--user user", "GitHub user where current repo is located (Default: Your GitHub username)") do |user|
+        opts.on("-u", "--user USER", "GitHub user where current repo is located (Default: Your GitHub username)") do |user|
           @options[:user] = user
         end
-        opts.on("-s", "--stack stack", "Stack for app on heroku (Default: cedar-14)") do |stack|
+        opts.on("-s", "--stack STACK", "Stack for app on heroku (Default: cedar-14)") do |stack|
           @options[:stack] = stack
         end
-        opts.on("-b", "--branch branch", "Branch to setup app from (Default: master)") do |branch|
+        opts.on("-b", "--branch BRANCH", "Branch to setup app from (Default: master)") do |branch|
           @options[:branch] = branch
         end
         opts.on('-h', '--help', 'Displays Help') do
