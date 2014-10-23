@@ -23,8 +23,8 @@ module Apperol
             @options[env_value.key] = value
           end
         end
-        opts.on("-p", "--personal", "Force app in personal apps instead of orgs") do
-          @options[:personal] = true
+        opts.on("-o", "--org ORG", "Push app to organization on heroku") do |org|
+          @options[:org] = org
         end
         opts.on("-r", "--repo repo", "GitHub repository used for the deploy (Default: user/dir_name)") do |repo|
           @options[:repo] = repo
@@ -150,7 +150,7 @@ module Apperol
         $stderr.puts("error: Required fields not filled. Please specify them. #{required_not_filled}")
         exit 1
       end
-      payload[:app][:organization] = "heroku" unless personal_app?
+      payload[:app][:organization] = org unless personal_app?
       payload.to_json
     end
 
@@ -179,7 +179,11 @@ module Apperol
     end
 
     def personal_app?
-      @options.fetch(:personal, false)
+      org.nil?
+    end
+
+    def org
+      @options.fetch(:org, nil)
     end
 
     def repo
