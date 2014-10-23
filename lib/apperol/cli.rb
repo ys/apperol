@@ -19,8 +19,11 @@ module Apperol
           option_key_name = key.downcase.gsub("_", "-")
           option_key_key = key.downcase.to_sym
           # Set default
-          @options[option_key_key] = definition["value"]
-          opts.on("--#{option_key_name} value", "#{definition["description"]} (Default: '#{definition["value"]}')") do |value|
+          value = definition.is_a?(String) ? definition : definition["value"]
+          @options[option_key_key] = value
+          required = definition.is_a?(String) || definition["required"].nil? || definition["required"] ? " required" : ""
+          description = definition.is_a?(String) ? key : definition["description"]
+          opts.on("--#{option_key_name} value", "#{description} (Default: '#{value}' #{required}) ") do |value|
             @options[option_key_key] = value
           end
         end
