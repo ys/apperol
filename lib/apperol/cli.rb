@@ -141,7 +141,7 @@ module Apperol
       required_not_filled = []
       app_json["env"].each do |key, definition|
         value = @options[key.downcase.to_sym]
-        if definition["required"] && value.strip.empty?
+        if (definition["required"].nil? || definition["required"]) && value.strip.empty?
           required_not_filled << key
         end
         payload[:overrides][:env][key] = value
