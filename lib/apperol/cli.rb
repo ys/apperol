@@ -6,6 +6,8 @@ require "optparse"
 require "netrc"
 require "spinning_cursor"
 
+require_relative "app_json"
+
 module Apperol
   class CLI
     EX_USAGE = 64
@@ -15,15 +17,10 @@ module Apperol
 
       parser = OptionParser.new do|opts|
         opts.banner = "Usage: apperol [options] [app_extension]"
-        app_json["env"].each do |key, definition|
-          option_key_name = key.downcase.gsub("_", "-")
-          option_key_key = key.downcase.to_sym
-          # Set default
-          value = definition.is_a?(String) ? definition : definition["value"]
-          required = definition.is_a?(String) || definition["required"].nil? || definition["required"] ? " required" : ""
-          description = definition.is_a?(String) ? key : definition["description"]
-          opts.on("--#{option_key_name} value", "#{description} (Default: '#{value}' #{required}) ") do |value|
-            @options[option_key_key] = value
+        app_json.env.each do |env_value|
+          option_key_name = env_value.key.downcase.gsub("_", "-")
+          opts.on("--#{option_key_name} value", "#{env_value.description} (Default: '#{env_value.value}' #{env_value.required?}) ") do |value|
+            @options[env_value.key] = value
           end
         end
         opts.on("-p", "--personal", "Force app in personal apps instead of orgs") do
@@ -141,12 +138,13 @@ module Apperol
         overrides: { env: {}}
       }
       required_not_filled = []
-      app_json["env"].each do |key, definition|
-        value = @options[key.downcase.to_sym] || (definition.is_a?(String) ? definition : definition["value"])
-        if (definition["required"].nil? || definition["required"]) && (value.nil? || value.strip.empty?)
-          required_not_filled << key
+      app_json.env.each do |env_value|
+        value = @options[env_value.key]
+        value_empty = value.nil? || value.strip.empty?
+        if env_value.needs_value? && value_empty
+          required_not_filled << env_value.key
         end
-        payload[:overrides][:env][key] = value
+        payload[:overrides][:env][env_value.key] = value unless value_empty
       end
       unless required_not_filled.empty?
         $stderr.puts("error: Required fields not filled. Please specify them. #{required_not_filled}")
@@ -249,7 +247,7 @@ module Apperol
         $stderr.puts("No app.json file here")
         exit 1
       end
-      @app_json ||= JSON.parse(File.read("app.json"))
+      @app_json ||= AppJson.new("app.json")
     end
   end
 end
