@@ -27,19 +27,16 @@ module Apperol
         opts.on("-p", "--personal", "Force app in personal apps instead of orgs") do
           @options[:personal] = true
         end
-        opts.on("-r", "--repo repo", "GitHub repository used for the deploy") do |repo|
+        opts.on("-r", "--repo repo", "GitHub repository used for the deploy (Default: user/dir_name)") do |repo|
           @options[:repo] = repo
         end
-        opts.on("-o", "--org org", "GitHub org where current repo is located") do |org|
-          @options[:org] = org
+        opts.on("-u", "--user user", "GitHub user where current repo is located (Default: Your GitHub username)") do |user|
+          @options[:user] = user
         end
-        opts.on("-u", "--user user", "GitHub user where current repo is located") do |user|
-          @options[:org] = user
-        end
-        opts.on("-s", "--stack stack", "Stack for app on heroku") do |stack|
+        opts.on("-s", "--stack stack", "Stack for app on heroku (Default: cedar-14)") do |stack|
           @options[:stack] = stack
         end
-        opts.on("-b", "--branch branch", "Branch to setup app from") do |branch|
+        opts.on("-b", "--branch branch", "Branch to setup app from (Default: master)") do |branch|
           @options[:branch] = branch
         end
         opts.on('-h', '--help', 'Displays Help') do
@@ -159,15 +156,20 @@ module Apperol
 
     def github_tarball_location
       $stdout.puts("Getting tarball location for empirical branch #{github_branch}")
-      req = Net::HTTP::Get.new(github_url)
-      req.basic_auth *github_creds
-      res = github_http.request(req)
+      res = github_get(tarball_path)
       if res["Location"]
         res["Location"]
       else
-        $stderr.puts("error: No tarball found for #{github_url} : #{JSON.parse(res.body)["message"]}")
+        $stderr.puts("error: No tarball found for #{github_url + tarball_path} : #{JSON.parse(res.body)["message"]}")
         exit 1
       end
+    end
+
+    def github_get(path)
+      puts github_url + path
+      req = Net::HTTP::Get.new(github_url + path)
+      req.basic_auth *github_creds
+      github_http.request(req)
     end
 
     def github_http
@@ -185,11 +187,14 @@ module Apperol
     end
 
     def default_repo
-      "#{org}/#{heroku_app_name}"
+      "#{user}/#{heroku_app_name}"
     end
 
-    def org
-      @options.fetch(:org, "heroku")
+    def user
+      @user ||= @options.fetch(:user) {
+        res = github_get("/user")
+        JSON.parse(res.body)["login"]
+      }
     end
 
     def rollbar_token
@@ -214,7 +219,11 @@ module Apperol
     end
 
     def github_url
-      @github_url ||= URI("https://api.github.com/repos/#{repo}/tarball/#{github_branch}")
+      URI("https://api.github.com")
+    end
+
+    def tarball_path
+      "/repos/#{repo}/tarball/#{github_branch}"
     end
 
     def github_creds
