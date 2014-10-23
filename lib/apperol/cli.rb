@@ -20,7 +20,6 @@ module Apperol
           option_key_key = key.downcase.to_sym
           # Set default
           value = definition.is_a?(String) ? definition : definition["value"]
-          @options[option_key_key] = value
           required = definition.is_a?(String) || definition["required"].nil? || definition["required"] ? " required" : ""
           description = definition.is_a?(String) ? key : definition["description"]
           opts.on("--#{option_key_name} value", "#{description} (Default: '#{value}' #{required}) ") do |value|
@@ -143,8 +142,8 @@ module Apperol
       }
       required_not_filled = []
       app_json["env"].each do |key, definition|
-        value = @options[key.downcase.to_sym]
-        if (definition["required"].nil? || definition["required"]) && value.strip.empty?
+        value = @options[key.downcase.to_sym] || (definition.is_a?(String) ? definition : definition["value"])
+        if (definition["required"].nil? || definition["required"]) && (value.nil? || value.strip.empty?)
           required_not_filled << key
         end
         payload[:overrides][:env][key] = value
