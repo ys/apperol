@@ -7,6 +7,8 @@ require "netrc"
 require "spinning_cursor"
 
 require_relative "app_json"
+require_relative "creds"
+require_relative "heroku_client"
 
 module Apperol
   class CLI
@@ -54,37 +56,39 @@ module Apperol
     end
 
     def call
-      heroku_app_setup
+      launch_app_setup do |response|
+        poll_app_status(response)
+      end
     end
 
-    def heroku_app_setup
-      req = Net::HTTP::Post.new(app_setup_url, initheader = heroku_headers)
-      req.basic_auth *heroku_creds
-      req.body = app_setup_payload
+    def launch_app_setup
       $stdout.puts("Setting up heroku app #{heroku_app_name}-#{@app_extension}")
-      res = heroku_http.request(req)
-      if res.code != "202"
-        $stderr.puts JSON.parse(res.body)["message"]
+      response = heroku_client.post(app_setup_url, app_setup_payload)
+      json_body = JSON.parse(response.body)
+      if response.code != "202"
+        $stderr.puts json_body["message"]
         exit 1
       else
-        poll_app_status(JSON.parse(res.body))
+        yield json_body
       end
     end
 
     def poll_app_status(response)
-      req = Net::HTTP::Get.new(app_setup_url(response["id"]), initheader = heroku_headers)
-      req.basic_auth *heroku_creds
+      build_id = response["id"]
+      output_stream_url = get_output_stream_url(build_id)
+      stream_build(output_stream_url)
+      finalizing_setup(build_id)
+    end
+
+    def finalizing_setup(build_id)
       res = {}
-      spin_wait("Setting up your app", "App setup done") do
+      spin_wait("Finalizing setup", "App setup done") do
         loop do
-          res = JSON.parse(heroku_http.request(req).body)
+          res = JSON.parse(heroku_client.get(app_setup_url(build_id)).body)
           break unless res["status"] == "pending"
         end
       end
       if res["status"] == "succeeded"
-        unless res["postdeploy"].empty?
-          $stdout.puts(res["postdeploy"]["output"])
-        end
         $stdout.puts("Application #{res["app"]["name"]}.herokuapp.com has been successfully created.")
         exit 0
       else
@@ -99,6 +103,35 @@ module Apperol
       end
     end
 
+    def get_output_stream_url(build_id)
+      res = {}
+      spin_wait("Setting up your app", "App setup done") do
+        loop do
+          res = JSON.parse(heroku_client.get(app_setup_url(build_id)).body)
+          break unless res["build"]["output_stream_url"].nil? || res["status"] != "pending"
+        end
+      end
+      res["build"]["output_stream_url"]
+    end
+
+    def stream_build(url)
+      req = Net::HTTP::Get.new(url, initheader = heroku_headers)
+      req.basic_auth *Apperol::Creds.heroku
+      builds = URI("https://build-output.heroku.com")
+      builds_http ||= Net::HTTP.new(builds.hostname, builds.port).tap do |http|
+        http.use_ssl = true
+      end
+      builds_http.request req do |response|
+        response.read_body do |chunk|
+          puts chunk
+        end
+      end
+    end
+
+    def heroku_client
+      @heroku_client ||= Apperol::HerokuClient.new
+    end
+
     def spin_wait(banner_txt, message_txt)
       SpinningCursor.run do
         banner banner_txt
@@ -111,6 +144,12 @@ module Apperol
       SpinningCursor.stop
     end
 
+    def heroku_auth_request(url)
+      req = Net::HTTP::Get.new(url , initheader = heroku_headers)
+      req.basic_auth *Apperol::Creds.heroku
+      req
+    end
+
     def app_setup_url(id = nil)
       URI("https://api.heroku.com/app-setups/#{id}")
     end
@@ -118,7 +157,7 @@ module Apperol
     def heroku_headers
       {
         "Content-Type" => "application/json",
-        "Accept" => "application/vnd.heroku+json; version=3"
+        "Accept" => "application/vnd.heroku+json; version=edge"
       }
     end
 
@@ -168,7 +207,7 @@ module Apperol
     def github_get(path)
       puts github_url + path
       req = Net::HTTP::Get.new(github_url + path)
-      req.basic_auth *github_creds
+      req.basic_auth *Apperol::Creds.github
       github_http.request(req)
     end
 
@@ -228,18 +267,6 @@ module Apperol
 
     def tarball_path
       "/repos/#{repo}/tarball/#{github_branch}"
-    end
-
-    def github_creds
-      netrc["api.github.com"]
-    end
-
-    def heroku_creds
-      netrc["api.heroku.com"]
-    end
-
-    def netrc
-      @netrc ||= Netrc.read
     end
 
     def heroku_app_name
