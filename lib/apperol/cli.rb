@@ -51,7 +51,7 @@ module Apperol
       @app_extension = args.shift
 
       unless @app_extension
-        $stderr.puts("usage: apperol [options] [app_extension]")
+        $stderr.puts(parser.help)
         exit EX_USAGE
       end
     end
