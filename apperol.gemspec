@@ -7,7 +7,7 @@ Gem::Specification.new do |spec|
   spec.name          = "apperol"
   spec.version       = Apperol::VERSION
   spec.authors       = ["Yannick"]
-  spec.email         = ["yannick@heroku.com"]
+  spec.email         = ["yannick@heroku.com", "opensource@heroku.com"]
   spec.summary       = %q{Create heroku app from heroku repository}
   spec.description   = %q{Create heroku app from heroku repository with app.json}
   spec.homepage      = "https://github.com/ys/apperol"
