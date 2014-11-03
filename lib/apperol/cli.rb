@@ -38,6 +38,9 @@ module Apperol
         opts.on("-s", "--stack STACK", "Stack for app on heroku (Default: cedar-14)") do |stack|
           @options[:stack] = stack
         end
+        opts.on("--no-ext", "Name app without extension") do
+          @options[:no_ext] = true
+        end
         opts.on("-b", "--branch BRANCH", "Branch to setup app from (Default: master)") do |branch|
           @options[:branch] = branch
         end
@@ -50,7 +53,7 @@ module Apperol
 
       @app_extension = args.shift
 
-      unless @app_extension
+      if !@options[:no_ext] && !@app_extension
         $stderr.puts(parser.help)
         exit EX_USAGE
       end
@@ -68,7 +71,7 @@ module Apperol
     private
 
     def launch_app_setup
-      $stdout.puts("Setting up heroku app #{heroku_app_name}-#{@app_extension}")
+      $stdout.puts("Setting up heroku app #{app_name}")
       response = heroku_client.post(app_setup_url, app_setup_payload)
       if response.status != 202
         $stderr.puts response.body["message"]
@@ -121,6 +124,14 @@ module Apperol
       response
     end
 
+    def app_name
+      name = heroku_app_name
+      unless @options[:no_ext]
+        name = name + "-" + @app_extension
+      end
+      name
+    end
+
     def heroku_client
       @heroku_client ||= Apperol::HerokuClient.new
     end
@@ -146,7 +157,7 @@ module Apperol
     def app_setup_payload
       payload = {
         app: {
-          name: "#{heroku_app_name}-#{@app_extension}",
+          name: app_name,
           stack: stack
         },
         source_blob: { url: github_tarball_location },
