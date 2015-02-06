@@ -25,11 +25,12 @@ Or install it yourself as:
 
 ```
 Usage: apperol [options] [app_extension]
-    -p, --personal                   Force app in personal apps instead of orgs
-    -s, --stack stack                Stack for app on heroku
-    -b, --branch branch              Branch to setup app from
-    -r, --repo repo                  GitHub repository source
-    -u, --user user                  GitHub user where the current repo is located
+    -o, --org ORG                    Push app to organization on heroku
+    -r, --repo REPO                  GitHub repository used for the deploy (Default: user/dir_name)
+    -u, --user USER                  GitHub user where current repo is located (Default: Your GitHub username)
+    -s, --stack STACK                Stack for app on heroku (Default: cedar-14)
+        --no-ext                     Name app without extension
+    -b, --branch BRANCH              Branch to setup app from (Default: master)
     -h, --help                       Displays Help
 ```
 
@@ -38,6 +39,17 @@ Usage: apperol [options] [app_extension]
 - App will be named [current_dir]-[app_extension] e.g.: direwolf-staging
 - Apperol CLI will have many options based on `env` part of the `app.json`
 - Apperol CLI uses heroku org by default, use `-r user/repo` to specify yours.
+
+## Credentials
+Apperol will look in ~/.netrc for api.github.com and api.heroku.com credentials.
+
+## Development
+
+```bash
+git clone git@github.com:ys/apperol.git
+bundle install
+bundle exec ruby -llib bin/apperol
+```
 
 ## Lack of tests
 
