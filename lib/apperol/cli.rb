@@ -57,6 +57,18 @@ module Apperol
         $stderr.puts(parser.help)
         exit EX_USAGE
       end
+
+      @gh_creds = Apperol::Creds::github
+      @h_creds = Apperol::Creds::heroku
+
+      if @gh_creds.nil?
+        $stderr.puts("Could not find api.github.com credentials in .netrc")
+        exit 1
+      elsif @h_creds.nil?
+        $stderr.puts("Could not find api.heroku.com credentials in .netrc")
+        exit 1
+      end
+
     end
 
     def call
