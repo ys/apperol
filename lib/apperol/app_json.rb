@@ -29,6 +29,14 @@ module Apperol
         definition.is_a?(String) ? key : definition["description"]
       end
 
+      def generator
+        definition.is_a?(String) ? nil: definition["generator"]
+      end
+
+      def use_generator?
+        generator
+      end
+
       def needs_value?
         required? && !has_value?
       end
