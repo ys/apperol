@@ -2,6 +2,7 @@ require "bundler"
 require "net/http"
 require "openssl"
 require "json"
+require "securerandom"
 require "optparse"
 require "netrc"
 require "spinning_cursor"
@@ -179,6 +180,10 @@ module Apperol
       app_json.env.each do |env_value|
         value = @options[env_value.key]
         value_empty = value.nil? || value.strip.empty?
+        if env_value.use_generator? && value_empty
+          value = generated_secret
+          value_empty = false
+        end
         if env_value.needs_value? && value_empty
           required_not_filled << env_value.key
         end
@@ -190,6 +195,10 @@ module Apperol
       end
       payload[:app][:organization] = org unless personal_app?
       payload.to_json
+    end
+
+    def generated_secret
+      SecureRandom.hex(ENV.fetch("RANDOM_LENGTH", 16))
     end
 
     def github_tarball_location
